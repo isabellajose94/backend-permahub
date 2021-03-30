@@ -7,11 +7,18 @@ import org.indie.isabella.permahub.entity.User
 import org.indie.isabella.permahub.entity.repository.UserRepository
 import org.indie.isabella.permahub.model.http.request.UserData
 import org.junit.jupiter.api.*
+import org.mockito.ArgumentCaptor
+import org.mockito.ArgumentMatchers
+import org.mockito.Mockito.*
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.boot.test.mock.mockito.MockBean
+import org.springframework.boot.test.mock.mockito.SpyBean
 import org.springframework.http.MediaType
+import org.springframework.mail.SimpleMailMessage
+import org.springframework.mail.javamail.JavaMailSender
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.ContextConfiguration
@@ -19,8 +26,12 @@ import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.ResultActions
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders
 import org.springframework.test.web.servlet.result.MockMvcResultHandlers
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper
-import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
+import java.util.*
+import javax.mail.internet.MimeMessage
+
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -36,6 +47,9 @@ class PublicUserControllerTest {
 
     private val objectMapper: ObjectMapper = ObjectMapper()
 
+    @SpyBean
+    private lateinit var javaMailSender: JavaMailSender
+
     @Value("\${permahub.public.frontend.url}")
     private lateinit var PUBLIC_FRONT_END_URL: String
 
@@ -44,9 +58,12 @@ class PublicUserControllerTest {
     @DisplayName("Request contains email and password")
     inner class RequestContainsEmailAndPassword() {
         private lateinit var result: ResultActions
+        private val argumentCaptor = ArgumentCaptor.forClass(MimeMessage::class.java)
 
         @BeforeAll
         fun triggerEvent() {
+            doNothing().`when`(javaMailSender).send(argumentCaptor.capture())
+
             result = mockMvc
                 .perform(
                     MockMvcRequestBuilders
@@ -69,6 +86,7 @@ class PublicUserControllerTest {
             userRepository.deleteAll()
         }
 
+
         @Test
         fun shouldReturn201() {
             result
@@ -87,7 +105,26 @@ class PublicUserControllerTest {
             Assertions.assertThat(encoder.matches("the_password", users[0].password)).isTrue
             Assertions.assertThat(users[0].createdDate).isNotNull
             Assertions.assertThat(users[0].lastModifiedDate).isNotNull
+            Assertions.assertThat(users[0].verificationCode).isNotNull
         }
+
+        @Test
+        fun shouldSendVerificationEmail() {
+            Assertions.assertThat(argumentCaptor.allValues.size).isEqualTo(1)
+            val actualMailMessage = argumentCaptor.value
+
+            Assertions.assertThat(actualMailMessage.allRecipients).hasSize(1)
+            Assertions.assertThat(actualMailMessage.allRecipients[0].toString()).isEqualTo("email@mail.co")
+            Assertions.assertThat(actualMailMessage.subject).isEqualTo("PermaHub sign up verification")
+
+            val user = userRepository.findAll()[0]
+            Assertions.assertThat(actualMailMessage.content).isEqualTo(
+                "Thank you for joining PermaHub!<br>" +
+                        "Please click this <a href='$PUBLIC_FRONT_END_URL/users/verify?code=${user.verificationCode}' target='_blank'>link</a> to verify your email."
+            )
+        }
+
+
     }
 
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -98,6 +135,8 @@ class PublicUserControllerTest {
 
         @BeforeAll
         fun triggerEvent() {
+            doNothing().`when`(javaMailSender).send(any(MimeMessage::class.java))
+
             result = mockMvc
                 .perform(
                     MockMvcRequestBuilders
@@ -134,6 +173,8 @@ class PublicUserControllerTest {
 
         @BeforeAll
         fun triggerEvent() {
+            doNothing().`when`(javaMailSender).send(any(MimeMessage::class.java))
+
             result = mockMvc.perform(
                 MockMvcRequestBuilders
                     .post("/public/api/users/register")
@@ -176,6 +217,8 @@ class PublicUserControllerTest {
 
         @BeforeAll
         fun triggerEvent() {
+            doNothing().`when`(javaMailSender).send(any(MimeMessage::class.java))
+
             result = mockMvc
                 .perform(
                     MockMvcRequestBuilders
@@ -223,7 +266,9 @@ class PublicUserControllerTest {
 
         @BeforeAll
         fun triggerEvent() {
-            userRepository.save(User("existing@client.co", "password"))
+            doNothing().`when`(javaMailSender).send(any(MimeMessage::class.java))
+            userRepository.save(User("existing@client.co", "password", UUID.randomUUID()))
+
             result = mockMvc
                 .perform(
                     MockMvcRequestBuilders
@@ -276,6 +321,8 @@ class PublicUserControllerTest {
 
         @BeforeAll
         fun triggerEvent() {
+            doNothing().`when`(javaMailSender).send(any(MimeMessage::class.java))
+
             result = mockMvc
                 .perform(
                     MockMvcRequestBuilders

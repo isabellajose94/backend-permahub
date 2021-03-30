@@ -7,13 +7,16 @@ import org.springframework.data.annotation.LastModifiedDate
 import org.springframework.data.mongodb.core.index.Indexed
 import org.springframework.data.mongodb.core.mapping.Document
 import java.util.*
+import javax.annotation.Generated
 
 @JsonIgnoreProperties("password")
 @Document
 data class User(
     @Indexed(unique = true)
     var email: String,
-    var password:String
+    var password: String,
+    @Indexed(unique = true)
+    var verificationCode: UUID
 ) {
     @Id
     lateinit var id: String
@@ -23,4 +26,6 @@ data class User(
 
     @LastModifiedDate
     lateinit var lastModifiedDate: Date
+
+
 }

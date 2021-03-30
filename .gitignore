@@ -35,3 +35,6 @@ out/
 
 ### VS Code ###
 .vscode/
+
+### Local environment file ###
+/src/resources/application-dev.properties
