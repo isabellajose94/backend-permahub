@@ -7,9 +7,8 @@ import org.springframework.data.annotation.LastModifiedDate
 import org.springframework.data.mongodb.core.index.Indexed
 import org.springframework.data.mongodb.core.mapping.Document
 import java.util.*
-import javax.annotation.Generated
 
-@JsonIgnoreProperties("password")
+@JsonIgnoreProperties("id", "password", "verificationCode")
 @Document
 data class User(
     @Indexed(unique = true)
