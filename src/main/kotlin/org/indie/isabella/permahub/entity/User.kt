@@ -26,5 +26,5 @@ data class User(
     @LastModifiedDate
     lateinit var lastModifiedDate: Date
 
-
+    var verified: Boolean = false
 }

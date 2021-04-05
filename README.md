@@ -16,16 +16,16 @@ coming soon!
 ### Running application
 
 #### Running test
-```
+```bash
 ./gradlew clean test
 ```
 
 #### Running the application
-```
+```bash
 ./gradlew bootRun
 ```
 
 #### Building Java JAR
-```
+```bash
 ./gradlew bootJar
 ```

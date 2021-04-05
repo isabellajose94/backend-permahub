@@ -1,4 +1,4 @@
-package org.indie.isabella.permahub.controller.public
+package org.indie.isabella.permahub.controller.pub
 
 import org.assertj.core.api.Assertions
 import org.hamcrest.CoreMatchers
@@ -8,16 +8,13 @@ import org.indie.isabella.permahub.entity.repository.UserRepository
 import org.indie.isabella.permahub.model.http.request.UserData
 import org.junit.jupiter.api.*
 import org.mockito.ArgumentCaptor
-import org.mockito.ArgumentMatchers
 import org.mockito.Mockito.*
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.boot.test.mock.mockito.SpyBean
 import org.springframework.http.MediaType
-import org.springframework.mail.SimpleMailMessage
 import org.springframework.mail.javamail.JavaMailSender
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.test.context.ActiveProfiles
@@ -37,8 +34,8 @@ import javax.mail.internet.MimeMessage
 @AutoConfigureMockMvc
 @ContextConfiguration(initializers = [MongoInitializer::class])
 @ActiveProfiles(value = ["test"])
-@DisplayName("Public User Controller Test")
-class PublicUserControllerTest {
+@DisplayName("Register Public User Controller Test")
+class RegisterUserControllerTest {
     @Autowired
     private lateinit var mockMvc: MockMvc
 
@@ -93,6 +90,8 @@ class PublicUserControllerTest {
                 .andExpect(status().isCreated)
                 .andExpect(jsonPath("$.success.email", CoreMatchers.`is`("email@mail.co")))
                 .andExpect(jsonPath("$.success.password").doesNotExist())
+                .andExpect(jsonPath("$.success.id").doesNotExist())
+                .andExpect(jsonPath("$.success.verificationCode").doesNotExist())
                 .andDo(MockMvcResultHandlers.print());
         }
 

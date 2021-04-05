@@ -27,7 +27,7 @@ class SecurityConfiguration : WebSecurityConfigurerAdapter() {
         httpSecurity
             // dont authenticate this particular request
             .authorizeRequests().antMatchers(
-                "/public/api/users/register",
+                "/public/api/**",
             ).permitAll()
             // all other requests need to be authenticated
             .anyRequest().authenticated().and()

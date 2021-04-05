@@ -3,13 +3,14 @@ package org.indie.isabella.permahub.services
 import org.indie.isabella.permahub.entity.User
 import org.indie.isabella.permahub.entity.repository.UserRepository
 import org.indie.isabella.permahub.exception.BadInputException
+import org.indie.isabella.permahub.exception.NotFoundException
 import org.indie.isabella.permahub.model.http.request.UserData
+import org.indie.isabella.permahub.model.http.request.VerifyData
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.mail.javamail.JavaMailSender
-import org.springframework.mail.javamail.MimeMessageHelper
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
+import java.lang.IllegalArgumentException
 import java.util.*
 import java.util.regex.Pattern
 
@@ -30,13 +31,13 @@ class UserService {
 
     companion object {
         val EMAIL_REGEX: Pattern = Pattern.compile(
-            "[a-zA-Z0-9\\+\\.\\_\\%\\-\\+]{1,256}" +
-                    "\\@" +
-                    "[a-zA-Z0-9][a-zA-Z0-9\\-]{0,64}" +
-                    "(" +
-                    "\\." +
-                    "[a-zA-Z0-9][a-zA-Z0-9\\-]{0,25}" +
-                    ")+"
+                "[a-zA-Z0-9\\+\\.\\_\\%\\-\\+]{1,256}" +
+                        "\\@" +
+                        "[a-zA-Z0-9][a-zA-Z0-9\\-]{0,64}" +
+                        "(" +
+                        "\\." +
+                        "[a-zA-Z0-9][a-zA-Z0-9\\-]{0,25}" +
+                        ")+"
         )
         private const val PASSWORD_MIN_LENGTH = 8
         private const val VERIFICATION_EMAIL_SUBJECT = "PermaHub sign up verification"
@@ -44,11 +45,11 @@ class UserService {
 
 
     fun createUser(userData: UserData): User {
-        validate(userData)
+        validateCreateUser(userData)
         var user = User(
-            userData.email,
-            passwordEncoder.encode(userData.password),
-            UUID.randomUUID()
+                userData.email,
+                passwordEncoder.encode(userData.password),
+                UUID.randomUUID()
         )
         user = userRepository.save(user)
         sendVerificationEmail(user)
@@ -56,18 +57,33 @@ class UserService {
         return user
     }
 
+    fun verifyUser(verifyData: VerifyData): User {
+        val code: UUID
+        try {
+            code = UUID.fromString(verifyData.code)
+        } catch (exception: IllegalArgumentException) {
+            throw BadInputException("Code should be UUID")
+        }
+
+        val optionalUser = userRepository.findOneByVerificationCode(code)
+        if (optionalUser.isEmpty) throw NotFoundException("User has not found")
+        val user = optionalUser.get()
+        user.verified = true
+        return userRepository.save(user)
+    }
+
     private fun sendVerificationEmail(user: User) {
         mailService.send(
-            user.email,
-            VERIFICATION_EMAIL_SUBJECT,
-            "Thank you for joining PermaHub!<br>" +
-                    "Please click this " +
-                    "<a href='${PUBLIC_FRONT_END_URL}/users/verify?code=${user.verificationCode}' target='_blank'>link</a>" +
-                    " to verify your email."
+                user.email,
+                VERIFICATION_EMAIL_SUBJECT,
+                "Thank you for joining PermaHub!<br>" +
+                        "Please click this " +
+                        "<a href='${PUBLIC_FRONT_END_URL}/users/verify?code=${user.verificationCode}' target='_blank'>link</a>" +
+                        " to verify your email."
         )
     }
 
-    private fun validate(userData: UserData) {
+    private fun validateCreateUser(userData: UserData) {
         if (!EMAIL_REGEX.matcher(userData.email).matches())
             throw BadInputException("Email should be _@_._")
         if (userData.password.length < PASSWORD_MIN_LENGTH)

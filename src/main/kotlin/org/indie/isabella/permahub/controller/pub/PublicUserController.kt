@@ -1,6 +1,7 @@
-package org.indie.isabella.permahub.controller.public
+package org.indie.isabella.permahub.controller.pub
 
 import org.indie.isabella.permahub.model.http.request.UserData
+import org.indie.isabella.permahub.model.http.request.VerifyData
 import org.indie.isabella.permahub.model.http.response.SuccessResponse
 import org.indie.isabella.permahub.services.UserService
 import org.springframework.beans.factory.annotation.Autowired
@@ -19,6 +20,13 @@ class PublicUserController {
     fun register(@RequestBody userData: UserData): ResponseEntity<SuccessResponse> {
         return ResponseEntity.status(HttpStatus.CREATED).body(SuccessResponse(
             userService.createUser(userData)
+        ))
+    }
+
+    @PatchMapping("verify")
+    fun verify(@RequestBody verifyData: VerifyData): ResponseEntity<SuccessResponse> {
+        return ResponseEntity.status(HttpStatus.OK).body(SuccessResponse(
+                userService.verifyUser(verifyData)
         ))
     }
 }
