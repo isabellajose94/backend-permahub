@@ -12,6 +12,7 @@ import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.http.converter.HttpMessageNotReadableException
+import org.springframework.security.authentication.InternalAuthenticationServiceException
 import org.springframework.security.core.AuthenticationException
 import org.springframework.web.bind.annotation.ControllerAdvice
 import org.springframework.web.bind.annotation.ExceptionHandler
@@ -37,17 +38,19 @@ class CustomResponseEntityExceptionHandler : ResponseEntityExceptionHandler() {
         BadInputException::class,
         DuplicateKeyException::class,
         NotFoundException::class,
+        InternalAuthenticationServiceException::class,
+        AuthenticationException::class,
         Exception::class
     ])
     final fun handleExceptionCustom(ex: Exception, request: WebRequest): ResponseEntity<Any> {
         logger.debug(ex)
+        ex.printStackTrace()
         var status = HttpStatus.INTERNAL_SERVER_ERROR
         var message = ex.message.toString()
 
         if (ex is BadInputException) {
             status = HttpStatus.BAD_REQUEST
-        }
-        if (ex is DuplicateKeyException) {
+        } else if (ex is DuplicateKeyException) {
             status = HttpStatus.BAD_REQUEST
 
             val collection = StringExceptionUtil.getValue(message, "collection", " ").split(".")[1]
@@ -56,9 +59,13 @@ class CustomResponseEntityExceptionHandler : ResponseEntityExceptionHandler() {
             val duplicateKeyMessage = duplicateKeyMap.map { (key, value) -> "$key `$value`" }.joinToString(", ")
 
             message = "$collection with $duplicateKeyMessage already exist"
-        }
-        if (ex is NotFoundException) {
+        } else if (ex is NotFoundException) {
             status = HttpStatus.NOT_FOUND
+        } else if (ex is InternalAuthenticationServiceException) {
+            status = HttpStatus.UNAUTHORIZED
+        } else if (ex is AuthenticationException) {
+            status = HttpStatus.UNAUTHORIZED
+            message = "Invalid email or password"
         }
 
         return handleExceptionInternal(ex, message, HttpHeaders(), status, request)

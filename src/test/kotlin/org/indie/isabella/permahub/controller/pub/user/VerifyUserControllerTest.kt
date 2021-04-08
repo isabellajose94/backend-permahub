@@ -1,4 +1,4 @@
-package org.indie.isabella.permahub.controller.pub
+package org.indie.isabella.permahub.controller.pub.user
 
 import org.assertj.core.api.Assertions
 import org.hamcrest.CoreMatchers
@@ -187,4 +187,5 @@ class VerifyUserControllerTest {
             Assertions.assertThat(users[0].verified).isEqualTo(true)
         }
     }
+
 }

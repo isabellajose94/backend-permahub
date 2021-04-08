@@ -8,4 +8,5 @@ import java.util.*
 @Repository
 interface UserRepository: MongoRepository<User, String> {
     fun findOneByVerificationCode(verificationCode: UUID): Optional<User>
+    fun findOneByEmail(email: String): Optional<User>
 }

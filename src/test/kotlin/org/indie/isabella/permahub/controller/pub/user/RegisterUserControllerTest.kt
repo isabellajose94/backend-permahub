@@ -1,4 +1,4 @@
-package org.indie.isabella.permahub.controller.pub
+package org.indie.isabella.permahub.controller.pub.user
 
 import org.assertj.core.api.Assertions
 import org.hamcrest.CoreMatchers
@@ -119,7 +119,7 @@ class RegisterUserControllerTest {
             val user = userRepository.findAll()[0]
             Assertions.assertThat(actualMailMessage.content).isEqualTo(
                 "Thank you for joining PermaHub!<br>" +
-                        "Please click this <a href='$PUBLIC_FRONT_END_URL/users/verify?code=${user.verificationCode}' target='_blank'>link</a> to verify your email."
+                        "Please click this <a href='$PUBLIC_FRONT_END_URL/users/verify/?code=${user.verificationCode}' target='_blank'>link</a> to verify your email."
             )
         }
 

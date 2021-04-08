@@ -57,6 +57,10 @@ class UserService {
         return user
     }
 
+    fun getUserByEmail(email: String): Optional<User>{
+        return userRepository.findOneByEmail(email)
+    }
+
     fun verifyUser(verifyData: VerifyData): User {
         val code: UUID
         try {
@@ -78,7 +82,7 @@ class UserService {
                 VERIFICATION_EMAIL_SUBJECT,
                 "Thank you for joining PermaHub!<br>" +
                         "Please click this " +
-                        "<a href='${PUBLIC_FRONT_END_URL}/users/verify?code=${user.verificationCode}' target='_blank'>link</a>" +
+                        "<a href='${PUBLIC_FRONT_END_URL}/users/verify/?code=${user.verificationCode}' target='_blank'>link</a>" +
                         " to verify your email."
         )
     }
