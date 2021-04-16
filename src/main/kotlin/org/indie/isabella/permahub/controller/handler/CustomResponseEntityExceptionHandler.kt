@@ -44,7 +44,6 @@ class CustomResponseEntityExceptionHandler : ResponseEntityExceptionHandler() {
     ])
     final fun handleExceptionCustom(ex: Exception, request: WebRequest): ResponseEntity<Any> {
         logger.debug(ex)
-        ex.printStackTrace()
         var status = HttpStatus.INTERNAL_SERVER_ERROR
         var message = ex.message.toString()
 

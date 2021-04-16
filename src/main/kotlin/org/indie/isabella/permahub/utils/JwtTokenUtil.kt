@@ -36,6 +36,11 @@ class JwtTokenUtil : Serializable {
             getClaimFromToken(claims, Claims::getExpiration)
         )
     }
+    fun getUsernameFromToken(token: String, bearerRemoved: Boolean): String {
+        var filteredToken = token
+        if (!bearerRemoved) filteredToken = filteredToken.substring(AUTHORIZATION_PREFIX.length)
+        return getUsernameFromToken(filteredToken)
+    }
 
     fun getUsernameFromToken(token: String?): String {
         return getClaimFromToken(token, Claims::getSubject)

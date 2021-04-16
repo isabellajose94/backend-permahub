@@ -6,6 +6,7 @@ import org.indie.isabella.permahub.exception.BadInputException
 import org.indie.isabella.permahub.exception.NotFoundException
 import org.indie.isabella.permahub.model.http.request.UserData
 import org.indie.isabella.permahub.model.http.request.VerifyData
+import org.indie.isabella.permahub.utils.JwtTokenUtil
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.security.crypto.password.PasswordEncoder
@@ -24,6 +25,9 @@ class UserService {
 
     @Autowired
     private lateinit var mailService: MailService
+
+    @Autowired
+    private lateinit var jwtTokenUtil: JwtTokenUtil
 
     @Value("\${permahub.public.frontend.url}")
     private lateinit var PUBLIC_FRONT_END_URL: String
@@ -55,6 +59,13 @@ class UserService {
         sendVerificationEmail(user)
 
         return user
+    }
+
+    fun getUserFromToken(token: String): User {
+        val email = jwtTokenUtil.getUsernameFromToken(token, false)
+        val optionalUser = getUserByEmail(email)
+        if (optionalUser.isEmpty) throw NotFoundException("User not found")
+        return optionalUser.get()
     }
 
     fun getUserByEmail(email: String): Optional<User>{

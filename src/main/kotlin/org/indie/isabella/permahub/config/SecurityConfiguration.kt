@@ -20,7 +20,13 @@ import org.springframework.security.web.session.SessionManagementFilter
 @EnableWebSecurity
 class SecurityConfiguration : WebSecurityConfigurerAdapter() {
     @Autowired
+    private lateinit var jwtAuthenticationEntryPoint: JwtAuthenticationEntryPoint
+
+    @Autowired
     private lateinit var jwtUserDetailsService: JwtUserDetailsService
+
+    @Autowired
+    private lateinit var jwtRequestFilter: JwtRequestFilter
 
     @Bean
     fun passwordEncoder(): PasswordEncoder {
@@ -42,10 +48,15 @@ class SecurityConfiguration : WebSecurityConfigurerAdapter() {
         return super.authenticationManagerBean()
     }
 
+    @Bean
+    fun corsFilter(): CORSFilter {
+        return CORSFilter()
+    }
 
     @Throws(Exception::class)
     override fun configure(httpSecurity: HttpSecurity) {
         httpSecurity
+            .addFilterBefore(corsFilter(), SessionManagementFilter::class.java)
             // dont authenticate this particular request
             .authorizeRequests().antMatchers(
                 "/public/api/**",
@@ -54,8 +65,10 @@ class SecurityConfiguration : WebSecurityConfigurerAdapter() {
             .anyRequest().authenticated().and()
             // make sure we use stateless session; session won't be used to
             // store user's state.
-            .exceptionHandling().and().sessionManagement()
+            .exceptionHandling().authenticationEntryPoint(jwtAuthenticationEntryPoint).and().sessionManagement()
             .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             .and().csrf().disable()
+        // Add a filter to validate the tokens with every request
+        httpSecurity.addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter::class.java)
     }
 }
