@@ -62,7 +62,7 @@ class UserService {
     }
 
     fun getUserFromToken(token: String): User {
-        val email = jwtTokenUtil.getUsernameFromToken(token, false)
+        val email = jwtTokenUtil.getUsernameFromToken(token, true,false)
         val optionalUser = getUserByEmail(email)
         if (optionalUser.isEmpty) throw NotFoundException("User not found")
         return optionalUser.get()

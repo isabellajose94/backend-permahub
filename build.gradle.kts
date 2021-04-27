@@ -38,6 +38,7 @@ dependencies {
 	testImplementation("org.springframework.security:spring-security-test")
 	testImplementation("org.testcontainers:junit-jupiter")
 	testImplementation("org.testcontainers:mongodb")
+	testImplementation("org.mockito:mockito-inline:3.8.0")
 }
 
 dependencyManagement {

@@ -3,47 +3,46 @@ package org.indie.isabella.permahub.utils
 import io.jsonwebtoken.Claims
 import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.SignatureAlgorithm
+import io.jsonwebtoken.impl.DefaultClock
+import org.indie.isabella.permahub.model.JwtResponse
 import org.indie.isabella.permahub.model.UserStatus
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.stereotype.Component
 import java.io.Serializable
+import java.time.LocalDateTime
+import java.time.ZoneId
 import java.util.*
 import java.util.function.Function
 
-
 @Component
 class JwtTokenUtil : Serializable {
-    private val serialVersionUID = -2550185165626007488L
-
-    val JWT_TOKEN_VALIDITY = (5 * 60 * 60).toLong()
 
     companion object {
         const val AUTHORIZATION_FIELD = "Authorization"
         const val AUTHORIZATION_PREFIX = "Bearer "
+        const val JWT_ACCESS_TOKEN_VALIDITY_BY_HOUR = 2L
+        const val JWT_REFRESH_TOKEN_VALIDITY_BY_HOUR = 24L
     }
 
-    @Value("\${jwt.secret}")
-    private lateinit var secret: String
+    @Autowired
+    private lateinit var defaultClock: DefaultClock
 
-    fun getAllUserStatus(token: String, bearerRemoved: Boolean) : UserStatus {
+    @Value("\${jwt.access.secret}")
+    private lateinit var ACCESS_SECRET: String
+
+    @Value("\${jwt.refresh.secret}")
+    private lateinit var REFRESH_SECRET: String
+
+    fun getUsernameFromToken(token: String, isAccessToken: Boolean, bearerRemoved: Boolean): String {
         var filteredToken = token
         if (!bearerRemoved) filteredToken = filteredToken.substring(AUTHORIZATION_PREFIX.length)
-        val claims = getAllClaimsFromToken(filteredToken)
-        return UserStatus(
-            getClaimFromToken(claims, Claims::getSubject),
-            getClaimFromToken(claims, Claims::getIssuedAt),
-            getClaimFromToken(claims, Claims::getExpiration)
-        )
-    }
-    fun getUsernameFromToken(token: String, bearerRemoved: Boolean): String {
-        var filteredToken = token
-        if (!bearerRemoved) filteredToken = filteredToken.substring(AUTHORIZATION_PREFIX.length)
-        return getUsernameFromToken(filteredToken)
+        return getUsernameFromToken(filteredToken, isAccessToken)
     }
 
-    fun getUsernameFromToken(token: String?): String {
-        return getClaimFromToken(token, Claims::getSubject)
+    fun getUsernameFromToken(token: String?, isAccessToken: Boolean = true): String {
+        return getClaimFromToken(token, Claims::getSubject, isAccessToken)
     }
 
     fun getIssuedAtDateFromToken(token: String?): Date {
@@ -54,17 +53,15 @@ class JwtTokenUtil : Serializable {
         return getClaimFromToken(token, Claims::getExpiration)
     }
 
-    fun <T> getClaimFromToken(claims: Claims, claimsResolver: Function<Claims, T>): T {
+    fun <T> getClaimFromToken(token: String?, claimsResolver: Function<Claims, T>, isAccessToken: Boolean = true): T {
+        val claims = getAllClaimsFromToken(token, isAccessToken)
         return claimsResolver.apply(claims)
     }
 
-    fun <T> getClaimFromToken(token: String?, claimsResolver: Function<Claims, T>): T {
-        val claims = getAllClaimsFromToken(token)
-        return claimsResolver.apply(claims)
-    }
-
-    private fun getAllClaimsFromToken(token: String?): Claims {
-        return Jwts.parser().setSigningKey(secret).parseClaimsJws(token).body
+    private fun getAllClaimsFromToken(token: String?, isAccessToken: Boolean = true): Claims {
+        var secret = ACCESS_SECRET
+        if (!isAccessToken) secret = REFRESH_SECRET
+        return Jwts.parser().setClock(defaultClock).setSigningKey(secret).parseClaimsJws(token).body
     }
 
     private fun isTokenExpired(token: String): Boolean? {
@@ -76,16 +73,22 @@ class JwtTokenUtil : Serializable {
         // here you specify tokens, for that the expiration is ignored
         return false
     }
-
-    fun generateToken(userDetails: UserDetails): String {
-        val claims: Map<String, Any> = HashMap()
-        return doGenerateToken(claims, userDetails.username)
+    fun buildJwtResponse(userDetails: UserDetails): JwtResponse {
+        val issuedAt = LocalDateTime.ofInstant(defaultClock.now().toInstant(), ZoneId.systemDefault())
+        val expirationAccessToken = issuedAt.plusHours(JWT_ACCESS_TOKEN_VALIDITY_BY_HOUR)
+        val expirationRefreshToken = issuedAt.plusHours(JWT_REFRESH_TOKEN_VALIDITY_BY_HOUR)
+        return JwtResponse(
+            doGenerateToken(userDetails.username, issuedAt, expirationAccessToken, SignatureAlgorithm.HS512, ACCESS_SECRET),
+            doGenerateToken(userDetails.username, issuedAt, expirationRefreshToken, SignatureAlgorithm.HS384, REFRESH_SECRET),
+                    expirationAccessToken
+        )
     }
 
-    private fun doGenerateToken(claims: Map<String, Any>, subject: String): String {
-        return Jwts.builder().setClaims(claims).setSubject(subject).setIssuedAt(Date(System.currentTimeMillis()))
-            .setExpiration(Date(System.currentTimeMillis() + JWT_TOKEN_VALIDITY * 1000))
-            .signWith(SignatureAlgorithm.HS512, secret).compact()
+    private fun doGenerateToken(subject: String, issuedAt: LocalDateTime, expiration: LocalDateTime, signatureAlgorithm: SignatureAlgorithm, secret: String): String {
+
+        return Jwts.builder().setSubject(subject).setIssuedAt(Date.from(issuedAt.atZone(ZoneId.systemDefault()).toInstant()))
+            .setExpiration(Date.from(expiration.atZone(ZoneId.systemDefault()).toInstant()))
+            .signWith(signatureAlgorithm, secret).compact()
     }
 
     fun canTokenBeRefreshed(token: String): Boolean? {

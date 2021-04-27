@@ -2,21 +2,16 @@ package org.indie.isabella.permahub.controller.pub.user
 
 import org.assertj.core.api.Assertions
 import org.hamcrest.CoreMatchers
-import org.indie.isabella.permahub.MongoInitializer
+import org.indie.isabella.permahub.config.MongoInitializer
 import org.indie.isabella.permahub.entity.User
 import org.indie.isabella.permahub.entity.repository.UserRepository
-import org.indie.isabella.permahub.model.http.request.UserData
 import org.indie.isabella.permahub.model.http.request.VerifyData
 import org.junit.jupiter.api.*
-import org.mockito.ArgumentCaptor
-import org.mockito.Mockito
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.boot.test.mock.mockito.SpyBean
 import org.springframework.http.MediaType
-import org.springframework.mail.javamail.JavaMailSender
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.ContextConfiguration
@@ -27,7 +22,6 @@ import org.springframework.test.web.servlet.result.MockMvcResultHandlers
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers
 import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper
 import java.util.*
-import javax.mail.internet.MimeMessage
 
 @SpringBootTest
 @AutoConfigureMockMvc

@@ -2,7 +2,7 @@ package org.indie.isabella.permahub.controller.pub.user
 
 import org.assertj.core.api.Assertions
 import org.hamcrest.CoreMatchers
-import org.indie.isabella.permahub.MongoInitializer
+import org.indie.isabella.permahub.config.MongoInitializer
 import org.indie.isabella.permahub.entity.User
 import org.indie.isabella.permahub.entity.repository.UserRepository
 import org.indie.isabella.permahub.model.http.request.UserData

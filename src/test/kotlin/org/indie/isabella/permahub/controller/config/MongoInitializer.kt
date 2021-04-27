@@ -1,4 +1,4 @@
-package org.indie.isabella.permahub
+package org.indie.isabella.permahub.config
 
 import org.springframework.boot.test.util.TestPropertyValues
 import org.springframework.context.ApplicationContextInitializer

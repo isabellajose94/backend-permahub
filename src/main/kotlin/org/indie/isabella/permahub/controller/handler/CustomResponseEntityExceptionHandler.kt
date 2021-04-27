@@ -2,6 +2,7 @@ package org.indie.isabella.permahub.controller.handler
 
 import com.fasterxml.jackson.core.JsonParser
 import com.fasterxml.jackson.databind.ObjectMapper
+import io.jsonwebtoken.JwtException
 import org.indie.isabella.permahub.exception.BadInputException
 import org.indie.isabella.permahub.exception.NotFoundException
 import org.indie.isabella.permahub.model.http.response.ErrorData
@@ -29,7 +30,7 @@ class CustomResponseEntityExceptionHandler : ResponseEntityExceptionHandler() {
             status: HttpStatus,
             request: WebRequest
     ): ResponseEntity<Any> {
-        logger.info(ex)
+        logger.info(ex.message, ex)
         val message = ex.localizedMessage.split(":")[0]
         return handleExceptionInternal(ex, message, headers, status, request)
     }
@@ -40,10 +41,11 @@ class CustomResponseEntityExceptionHandler : ResponseEntityExceptionHandler() {
         NotFoundException::class,
         InternalAuthenticationServiceException::class,
         AuthenticationException::class,
+        JwtException::class,
         Exception::class
     ])
     final fun handleExceptionCustom(ex: Exception, request: WebRequest): ResponseEntity<Any> {
-        logger.debug(ex)
+        logger.debug(ex.message, ex)
         var status = HttpStatus.INTERNAL_SERVER_ERROR
         var message = ex.message.toString()
 
@@ -65,6 +67,9 @@ class CustomResponseEntityExceptionHandler : ResponseEntityExceptionHandler() {
         } else if (ex is AuthenticationException) {
             status = HttpStatus.UNAUTHORIZED
             message = "Invalid email or password"
+        } else if (ex is JwtException) {
+            status = HttpStatus.UNAUTHORIZED
+            message = "Invalid token"
         }
 
         return handleExceptionInternal(ex, message, HttpHeaders(), status, request)

@@ -2,7 +2,7 @@ package org.indie.isabella.permahub.controller.pri.user
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.hamcrest.CoreMatchers
-import org.indie.isabella.permahub.MongoInitializer
+import org.indie.isabella.permahub.config.MongoInitializer
 import org.indie.isabella.permahub.entity.User
 import org.indie.isabella.permahub.entity.repository.UserRepository
 import org.indie.isabella.permahub.model.http.request.UserData
@@ -139,7 +139,7 @@ class GetUserControllerTest {
             )
 
 
-            val jwt = JSONObject(authResult.andReturn().response.contentAsString).getJSONObject("success")["token"]
+            val jwt = JSONObject(authResult.andReturn().response.contentAsString).getJSONObject("success")["accessToken"]
 
             result = mockMvc.perform(
                     MockMvcRequestBuilders
@@ -204,7 +204,7 @@ class GetUserControllerTest {
             )
 
 
-            val jwt = JSONObject(authResult.andReturn().response.contentAsString).getJSONObject("success")["token"]
+            val jwt = JSONObject(authResult.andReturn().response.contentAsString).getJSONObject("success")["accessToken"]
 
             result = mockMvc.perform(
                     MockMvcRequestBuilders

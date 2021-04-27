@@ -1,5 +1,6 @@
 package org.indie.isabella.permahub.config
 
+import io.jsonwebtoken.impl.DefaultClock
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -18,5 +19,9 @@ class GeneralConfiguration {
     @Bean
     fun validatingMongoEventListener(): ValidatingMongoEventListener {
         return ValidatingMongoEventListener(validator())
+    }
+    @Bean
+    fun defaultClock(): DefaultClock {
+        return DefaultClock()
     }
 }

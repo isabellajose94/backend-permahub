@@ -1,5 +1,6 @@
 package org.indie.isabella.permahub.controller.pub
 
+import org.indie.isabella.permahub.model.http.request.ReAuthenticateData
 import org.indie.isabella.permahub.model.http.request.UserData
 import org.indie.isabella.permahub.model.http.request.VerifyData
 import org.indie.isabella.permahub.model.http.response.SuccessResponse
@@ -30,6 +31,13 @@ class PublicUserController {
     @PostMapping("authenticate")
     fun authenticate(@RequestBody userData: UserData): ResponseEntity<SuccessResponse> {
         val jwtResponse = authenticationService.authenticate(userData)
+        return ResponseEntity.status(HttpStatus.CREATED).body(SuccessResponse(jwtResponse))
+    }
+
+    @CrossOrigin(value = ["\${permahub.private.frontend.url}"])
+    @PostMapping("re-authenticate")
+    fun reauthenticate(@RequestBody reAuthenticateData: ReAuthenticateData): ResponseEntity<SuccessResponse> {
+        val jwtResponse = authenticationService.authenticate(reAuthenticateData)
         return ResponseEntity.status(HttpStatus.CREATED).body(SuccessResponse(jwtResponse))
     }
 
