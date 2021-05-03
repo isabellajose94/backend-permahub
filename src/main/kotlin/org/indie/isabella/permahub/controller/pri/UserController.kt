@@ -1,5 +1,6 @@
 package org.indie.isabella.permahub.controller.pri
 
+import org.indie.isabella.permahub.model.http.request.UserProfileData
 import org.indie.isabella.permahub.model.http.response.SuccessResponse
 import org.indie.isabella.permahub.services.UserService
 import org.indie.isabella.permahub.utils.JwtTokenUtil
@@ -11,7 +12,7 @@ import org.springframework.web.bind.annotation.*
 @RestController
 @RequestMapping("api/users")
 @CrossOrigin(value = ["\${permahub.private.frontend.url}"],
-    allowCredentials = "true", methods = [RequestMethod.OPTIONS, RequestMethod.GET],
+    allowCredentials = "true", methods = [RequestMethod.OPTIONS, RequestMethod.GET, RequestMethod.PATCH],
             maxAge = 1800)
 class UserController {
 
@@ -22,6 +23,12 @@ class UserController {
     fun get(@RequestHeader(JwtTokenUtil.AUTHORIZATION_FIELD) jwt: String): ResponseEntity<SuccessResponse> {
         return ResponseEntity.status(HttpStatus.OK).body(SuccessResponse(
                 userService.getUserFromToken(jwt)
+        ))
+    }
+    @PatchMapping()
+    fun patch(@RequestHeader(JwtTokenUtil.AUTHORIZATION_FIELD) jwt: String, @RequestBody userProfileData: UserProfileData): ResponseEntity<SuccessResponse> {
+        return ResponseEntity.status(HttpStatus.OK).body(SuccessResponse(
+            userService.updateUserFromToken(jwt, userProfileData)
         ))
     }
 }

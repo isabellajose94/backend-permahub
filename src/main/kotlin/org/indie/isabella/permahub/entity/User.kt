@@ -1,6 +1,9 @@
 package org.indie.isabella.permahub.entity
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.mongodb.lang.Nullable
+import org.indie.isabella.permahub.model.Area
+import org.indie.isabella.permahub.model.Contact
 import org.springframework.data.annotation.CreatedDate
 import org.springframework.data.annotation.Id
 import org.springframework.data.annotation.LastModifiedDate
@@ -27,4 +30,23 @@ data class User(
     lateinit var lastModifiedDate: Date
 
     var verified: Boolean = false
+
+    @Nullable
+    var name: String? = null
+
+    @Nullable
+    var headline: String? = null
+
+    @Nullable
+    var about: String? = null
+
+    @Nullable
+    var type: String? = null
+
+    @Nullable
+    var area: Area? = null
+
+    @Nullable
+    var contact: Contact? = null
+
 }

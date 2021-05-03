@@ -1,6 +1,8 @@
 package org.indie.isabella.permahub.config
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import org.apache.commons.logging.Log
+import org.apache.commons.logging.LogFactory
 import org.indie.isabella.permahub.model.http.response.ErrorData
 import org.indie.isabella.permahub.model.http.response.ErrorResponse
 import org.springframework.http.HttpStatus
@@ -20,11 +22,14 @@ class JwtAuthenticationEntryPoint: AuthenticationEntryPoint, Serializable {
 
     private val objectMapper = ObjectMapper()
 
+    private val logger = LogFactory.getLog(javaClass)
+
     @Throws(IOException::class)
     override fun commence(
         request: HttpServletRequest?, response: HttpServletResponse,
         authException: AuthenticationException
     ) {
+        logger.debug(authException.message, authException)
         var message = authException.message
         if (authException is InsufficientAuthenticationException) {
             message = "Full authentication is required"

@@ -172,6 +172,7 @@ class GetUserControllerTest {
                                     CoreMatchers.`is`("Invalid CORS request")
                             )
                     )
+            Locale.CANADA.isO3Country
         }
     }
 

@@ -66,7 +66,7 @@ class JwtTokenUtil : Serializable {
 
     private fun isTokenExpired(token: String): Boolean? {
         val expiration: Date = getExpirationDateFromToken(token)
-        return expiration.before(Date())
+        return expiration.before(defaultClock.now())
     }
 
     private fun ignoreTokenExpiration(token: String): Boolean {
